@@ -7,111 +7,120 @@ const int SCREEN_HEIGHT = 720;
 
 const float GRAVITY = 9.8f / 4;
 
-enum TurretType {
-    RANGED,
-    MELEE
+enum Direction {
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT
 };
 
-struct Entity {
-    public:
-        float damage;
-        float x;
-        float y;
-        float width;
-        float height;
-
-        Entity(){}
-};
-
-struct Player : public Entity{
-    public:
-        float dy = 0;
-
-        Player(float x, float y, float width, float height){
-            this->x = x;
-            this->y = y;
-            this->width = width;
-            this->height = height;
-            this->damage = damage;
-        }
-
-        void update(){
-            if(this->y + height < SCREEN_HEIGHT - 50) dy += min(this->y + height - SCREEN_HEIGHT - 50, GRAVITY);
-            y+=dy;
-
-            DrawRectangle(this->x, this->y, this->width, this->height, MAROON);
-        }
-
-        void jump(){
-            dy = -10.0f;
-        }
-};
-
-struct Turret : public Entity {
-    public:
-        TurretType type;
-
-        Turret(float x, float y, float damage, TurretType type){
-            this->type = type;
-        }
-        
-};
-
-struct Structure {
+class Entity {
     public:
         float x;
         float y;
         float width;
         float height;
+        float rightx;
+        float bottomy;
 
-        Structure(float x, float y, float width, float height){
+        Entity() {}
+
+        Entity(float x, float y, float width, float height){
             this->x = x;
             this->y = y;
             this->width = width;
             this->height = height;
+            this->rightx = x + width;
+            this->bottomy = y + height;
         }
 
-        void draw(){
-            DrawRectangle(this->x, this->y, this->width, this->height, WHITE);
+        void draw(){ DrawRectangle(x, y, width, height, MAROON); }
+
+        bool hasCollided(Entity entity){ return withinYBounds(entity) && withinXBounds(entity); }
+
+        bool withinYBounds(Entity entity){ return (entity.bottomy > y || entity.y < bottomy); }
+
+        bool withinXBounds(Entity entity){ return (entity.rightx > x || entity.x < rightx); }
+};
+
+class Structure : public Entity {
+    public:
+        Structure() {}
+
+        Structure(float x, float y, float width, float height) : Entity(x, y, width, height){ }
+};
+
+const int structureCount = 2;
+Structure structures[structureCount];
+
+class Player : public Entity {
+    public:
+        int credits = 0;
+        int damage = 8;
+        int health = 65;
+
+        Player(float x, float y, float width, float height) : Entity(x, y, width, height){ }
+
+        bool canMove(Direction dir, Structure structures[]){
+            bool ableToMove = true;
+            for(int i = 0; i < structureCount; i++){
+                if(withinYBounds(structures[i])){
+                    switch(dir){
+                        case UP:
+                            // TODO
+                            break;
+                        case DOWN:
+                            // TODO
+                            break;
+                        case LEFT:
+                            (x > structures[i].rightx) ? printf("STRUCTURE %i TRUE\n", i) : printf("STRUCTURE %i FALSE\n", i);
+                            break;
+                        case RIGHT:
+                            (rightx < structures[i].x) ? printf("STRUCTURE %i TRUE\n", i) : printf("STRUCTURE %i FALSE\n", i);
+                            break;
+                    }
+                }
+                if(!ableToMove){ return false; }
+            }
+            return true;
         }
 
-        bool objectHasCollided(float objectx, float objecty, float objectHeight, float objectWidth){
-            float objectBottom = objecty + objectHeight;
-            float objectRight = objectx + objectWidth;
-            return (objectBottom > x || objectx < x + height) && (objectRight > x || objectx < x + width);
+        void update(Structure structures[]){
+            if(IsKeyDown(KEY_D)) { if(canMove(RIGHT, structures)) { x+=2; } }
+            if(IsKeyDown(KEY_A)) { if(canMove(LEFT, structures)) { x-=2; } }
         }
 };
 
-Structure ground(0, SCREEN_HEIGHT - 50, SCREEN_WIDTH, 50);
-void drawScene(){
-    ClearBackground(BLACK);
-    ground.draw();
+void inititializeStructures(){
+    Structure floor((float)0, (float)SCREEN_HEIGHT - 50, (float)SCREEN_WIDTH, (float)50);
+    Structure wall1((float)SCREEN_WIDTH / 2 + 200, (float) SCREEN_HEIGHT / 2, 50, 200);
+
+    structures[0] = floor;
+    structures[1] = wall1;
 }
 
-Player player(SCREEN_HEIGHT / 2, SCREEN_WIDTH / 2, 20, 40);
-void drawPlayer(bool alive){
-    if(!alive) return;
-
-    if(IsKeyPressed(KEY_SPACE)) player.jump();
-    // if(IsKeyDown(KEY_S)) player.y++;
-    if(IsKeyDown(KEY_D)) player.x++;
-    if(IsKeyDown(KEY_A)) player.x--;
-
-    player.update();
+void drawStructures(){
+    for(int i = 0; i < structureCount; i++){
+        structures[i].draw();
+    }
 }
 
 int main(void) {
-    bool playerAlive = true;
+    Player player((float)SCREEN_WIDTH / 2, (float)SCREEN_HEIGHT / 2, 25, 50);
 
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Pong Frvr");
+    inititializeStructures();
+
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Tower Defensington!?");
     SetTargetFPS(165);
 
     InitAudioDevice();
 
     while (!WindowShouldClose()) {
         BeginDrawing();
-            drawScene();
-            drawPlayer(playerAlive);
+            ClearBackground(BLACK);
+            drawStructures();
+            player.update(structures);
+            player.draw();
         EndDrawing();
     }
 
