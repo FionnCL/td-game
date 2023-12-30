@@ -38,9 +38,9 @@ class Entity {
 
         bool hasCollided(Entity entity){ return withinYBounds(entity) && withinXBounds(entity); }
 
-        bool withinYBounds(Entity entity){ return (entity.bottomy > y || entity.y < bottomy); }
+        bool withinYBounds(Entity entity){ return (entity.bottomy > y && entity.y < bottomy); }
 
-        bool withinXBounds(Entity entity){ return (entity.rightx > x || entity.x < rightx); }
+        bool withinXBounds(Entity entity){ return (entity.rightx > x && entity.x < rightx); }
 };
 
 class Structure : public Entity {
@@ -64,7 +64,7 @@ class Player : public Entity {
         bool canMove(Direction dir, Structure structures[]){
             bool ableToMove = true;
             for(int i = 0; i < structureCount; i++){
-                if(withinYBounds(structures[i])){
+                if(this->withinYBounds(structures[i])){
                     switch(dir){
                         case UP:
                             // TODO
@@ -73,10 +73,10 @@ class Player : public Entity {
                             // TODO
                             break;
                         case LEFT:
-                            (x > structures[i].rightx) ? printf("STRUCTURE %i TRUE\n", i) : printf("STRUCTURE %i FALSE\n", i);
+                            (this->x > structures[i].rightx) ? ableToMove = true : ableToMove = false;
                             break;
                         case RIGHT:
-                            (rightx < structures[i].x) ? printf("STRUCTURE %i TRUE\n", i) : printf("STRUCTURE %i FALSE\n", i);
+                            (this->rightx < structures[i].x) ? printf("STRUCTURE %i TRUE,\n\trx=%i\n\tx=%i\n", i, rightx, x) : printf("STRUCTURE %i FALSE\n", i);
                             break;
                     }
                 }
