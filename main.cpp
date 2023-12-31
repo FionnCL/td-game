@@ -38,9 +38,9 @@ class Entity {
 
         bool hasCollided(Entity entity){ return withinYBounds(entity) && withinXBounds(entity); }
 
-        bool withinYBounds(Entity entity){ return (entity.bottomy > y && entity.y < bottomy); }
+        bool withinYBounds(Entity entity){ return ((entity.bottomy >= y && y >= entity.y) || (entity.bottomy >= bottomy && entity.y <= bottomy)); }
 
-        bool withinXBounds(Entity entity){ return (entity.rightx > x && entity.x < rightx); }
+        bool withinXBounds(Entity entity){ return ((entity.rightx >= x && x >= entity.x) || (entity.rightx >= rightx && rightx >= entity.x)); }
 };
 
 class Structure : public Entity {
@@ -64,21 +64,20 @@ class Player : public Entity {
         bool canMove(Direction dir, Structure structures[]){
             bool ableToMove = true;
             for(int i = 0; i < structureCount; i++){
-                if(this->withinYBounds(structures[i])){
+                    Structure currEntity = structures[i];
                     switch(dir){
                         case UP:
-                            // TODO
+                            withinXBounds(currEntity) && (currEntity.bottomy >= bottomy && currEntity.y <= bottomy) ? ableToMove = false: ableToMove = true;
                             break;
                         case DOWN:
-                            // TODO
+                            withinXBounds(currEntity) && (currEntity.bottomy >= y && y >= currEntity.y) ? ableToMove = false: ableToMove = true;
                             break;
                         case LEFT:
-                            (this->x > structures[i].rightx) ? ableToMove = true : ableToMove = false;
+                            withinYBounds(currEntity) && (currEntity.rightx >= x && x >= currEntity.x) ? ableToMove = false: ableToMove = true;
                             break;
                         case RIGHT:
-                            (this->rightx < structures[i].x) ? printf("STRUCTURE %i TRUE,\n\trx=%i\n\tx=%i\n", i, rightx, x) : printf("STRUCTURE %i FALSE\n", i);
+                            withinYBounds(currEntity) && (currEntity.rightx >= rightx && rightx >= currEntity.x) ? ableToMove = false: ableToMove = true;
                             break;
-                    }
                 }
                 if(!ableToMove){ return false; }
             }
@@ -86,8 +85,10 @@ class Player : public Entity {
         }
 
         void update(Structure structures[]){
-            if(IsKeyDown(KEY_D)) { if(canMove(RIGHT, structures)) { x+=2; } }
-            if(IsKeyDown(KEY_A)) { if(canMove(LEFT, structures)) { x-=2; } }
+            if(IsKeyDown(KEY_D)) { if(canMove(RIGHT, structures)) { x+=1; rightx+=1; } }
+            if(IsKeyDown(KEY_A)) { if(canMove(LEFT, structures)) { x-=1; rightx-=1; } }
+            if(IsKeyDown(KEY_S)) { if(canMove(DOWN, structures)) { y+=1; bottomy+=1; } }
+            if(IsKeyDown(KEY_W)) { if(canMove(UP, structures)) { y-=1; bottomy-=1; } }
         }
 };
 
